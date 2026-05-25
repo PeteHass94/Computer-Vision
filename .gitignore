@@ -17,6 +17,7 @@ models/
 *.pth
 *.h5
 *.zip
+*.mov
 
 # Annotated output videos (large, not needed for deploy)
 output/*.mp4
@@ -24,3 +25,4 @@ output/dev_clip5_seed_check.jpg
 
 # Logs / temp
 *.log
+
