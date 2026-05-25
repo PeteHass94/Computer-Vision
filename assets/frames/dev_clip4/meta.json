@@ -1,0 +1,8 @@
+{
+  "clip": "clips/dev_clip4.mp4",
+  "fps": 30.0,
+  "frame_step": 3,
+  "total": 3611,
+  "out_w": 960,
+  "out_h": 540
+}

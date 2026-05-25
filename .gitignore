@@ -4,39 +4,23 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Video and large data
-clips/*.mp4
-matches/*mp4
-output/*.mp4
-output/*.parquet
-*.pt
-*.pth
-
-# Calibration data (optional - keep if you want to commit it)
-# calibration/*.json
-
-# OS
+# OS / IDE
 .DS_Store
-
-# IDE
 .vscode/
 .idea/
 
-# Ignore data and weights
+# Heavy files — not needed for read-only viewer
 clips/
-matches/
 models/
-output/
-
-# Ignore heavy directories
-data/
-datasets/
-videos/
-weights/
-src/
-
-# Ignore heavy file extensions
 *.mp4
-*.zip
 *.pt
+*.pth
 *.h5
+*.zip
+
+# Annotated output videos (large, not needed for deploy)
+output/*.mp4
+output/dev_clip5_seed_check.jpg
+
+# Logs / temp
+*.log

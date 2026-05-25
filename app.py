@@ -13,6 +13,13 @@ import viewer_utils as vu
 
 st.set_page_config(page_title="Football CV — From Veo to Tracking Data", layout="wide")
 
+st.info(
+    "**Read-only demo.** "
+    "Source code, full processing pipeline, and Veo footage are available in the "
+    "[main branch on GitHub](https://github.com/phassard/football-cv).",
+    icon="ℹ️",
+)
+
 vu.clip_selector()
 
 # ---------------------------------------------------------------------------
