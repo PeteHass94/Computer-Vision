@@ -15,6 +15,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent))
 from match_time import frame_to_match_time, load_timing as _load_timing_raw
+from match_meta import load_meta as _load_meta_raw
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -50,17 +51,23 @@ def teams_path(clip: Path) -> Path:
 # Clip selector — call on every page to keep selection in sync
 # ---------------------------------------------------------------------------
 
-def clip_selector() -> Path:
-    """Sidebar dropdown that persists the selected clip via session_state."""
-    if "selected_clip" not in st.session_state:
-        st.session_state.selected_clip = CLIPS[0]
+def clip_selector(exclude: list[str] | None = None) -> Path:
+    """Sidebar dropdown that persists the selected clip via session_state.
+
+    exclude — list of clip paths (e.g. ["clips/dev_clip3.mp4"]) to hide.
+    """
+    available = [c for c in CLIPS if c not in (exclude or [])]
+    if not available:
+        available = CLIPS
+
+    if "selected_clip" not in st.session_state or st.session_state.selected_clip not in available:
+        st.session_state.selected_clip = available[0]
 
     choice = st.sidebar.selectbox(
         "Dev clip",
-        options=CLIPS,
-        index=CLIPS.index(st.session_state.selected_clip)
-              if st.session_state.selected_clip in CLIPS else 0,
-        format_func=lambda p: Path(p).name,
+        options=available,
+        index=available.index(st.session_state.selected_clip),
+        format_func=lambda p: _load_meta_raw(Path(p).name).get("match_label", Path(p).name),
     )
     st.session_state.selected_clip = choice
 
@@ -95,6 +102,11 @@ def load_timing(path: str) -> dict:
 def load_teams(path: str) -> dict:
     with open(path) as f:
         return json.load(f)
+
+
+@st.cache_data
+def load_match_meta(clip_name: str) -> dict:
+    return _load_meta_raw(clip_name)
 
 
 @st.cache_data
@@ -325,7 +337,8 @@ def render_viewer(
             st.code(pipeline_cmd, language="bash")
         return
 
-    if not clip_path.exists():
+    has_jpeg_frames = Path(f"assets/frames/{clip_path.stem}").exists()
+    if not clip_path.exists() and not has_jpeg_frames:
         st.error(f"Clip not found: `{clip_path}`")
         return
 
@@ -346,11 +359,12 @@ def render_viewer(
         )
         return
 
-    hom    = load_homography(str(hom_path))
-    timing = load_timing(str(tim_path)) if tim_path.exists() else {"kickoff_seconds": 0.0}
-    teams    = load_teams(str(teams_path(clip_path)))
-    colours  = colours_from_seeds(str(seeds_path(clip_path)))
-    fps, _   = load_video_metadata(str(clip_path))
+    hom        = load_homography(str(hom_path))
+    timing     = load_timing(str(tim_path)) if tim_path.exists() else {"kickoff_seconds": 0.0}
+    teams      = load_teams(str(teams_path(clip_path)))
+    colours    = colours_from_seeds(str(seeds_path(clip_path)))
+    fps, _     = load_video_metadata(str(clip_path))
+    meta_match = load_match_meta(clip_path.name)
 
     pitch_length = hom["pitch_length_m"]
     pitch_width  = hom["pitch_width_m"]
@@ -362,15 +376,19 @@ def render_viewer(
     min_frame = int(tracks["frame_id"].min())
     max_frame = int(tracks["frame_id"].max())
 
-    # --- Sidebar: focus toggle ---
-    frame_key   = f"{page_key}_frame"
-    focus_key   = f"{page_key}_focus_rangers"
+    # --- Sidebar: team filter ---
+    frame_key    = f"{page_key}_frame"
+    filter_key   = f"{page_key}_team_filter"
     has_team_col = "team" in tracks.columns
 
+    away = meta_match.get("away_team", "Opposition")
     if has_team_col:
-        focus = st.sidebar.checkbox("Focus on Enniskillen Rangers", value=True, key=focus_key)
+        filter_options = ["Show all", "ERFC only", f"{away} only", "Referee only"]
+        team_filter = st.sidebar.selectbox(
+            "Team filter", options=filter_options, index=0, key=filter_key,
+        )
     else:
-        focus = False
+        team_filter = "Show all"
 
     debug_key = f"{page_key}_debug"
     show_debug = st.sidebar.checkbox("Show debug info", value=False, key=debug_key)
@@ -382,12 +400,13 @@ def render_viewer(
 
     # --- Match time caption ---
     match_time_str = frame_to_match_time(st.session_state[frame_key], output_fps, timing)
-    st.caption(f"{clip_path.name}  ·  Match time: **{match_time_str}**")
+    st.caption(f"{meta_match['match_label']}  ·  Match time: **{match_time_str}**")
 
     # --- Frame rows ---
     frame_rows = tracks[tracks["frame_id"] == st.session_state[frame_key]]
-    if focus and has_team_col:
-        display_rows = frame_rows[frame_rows["team"] == 0]
+    if has_team_col and team_filter != "Show all":
+        _team_map = {"ERFC only": 0, f"{away} only": 1, "Referee only": 2}
+        display_rows = frame_rows[frame_rows["team"] == _team_map.get(team_filter, -99)]
     else:
         display_rows = frame_rows
 
@@ -411,27 +430,116 @@ def render_viewer(
                 f"pitch_x {pitch_rows['pitch_x'].min():.1f}–{pitch_rows['pitch_x'].max():.1f} · "
                 f"pitch_y {pitch_rows['pitch_y'].min():.1f}–{pitch_rows['pitch_y'].max():.1f}"
             )
+        _erfc_dir = meta_match.get("erfc_attacking_direction", "right")
+        _away     = meta_match.get("away_team", "Opposition")
+        if _erfc_dir == "right":
+            _left_ann  = "Enniskillen Rangers attacking →"
+            _right_ann = f"← {_away} attacking"
+        else:
+            _left_ann  = f"← Enniskillen Rangers attacking"
+            _right_ann = f"{_away} attacking →"
+        st.markdown(
+            f"<div style='display:flex;justify-content:space-between;"
+            f"color:#aaa;font-size:0.78rem;padding:2px 0 4px'>"
+            f"<span>{_left_ann}</span><span>{_right_ann}</span></div>",
+            unsafe_allow_html=True,
+        )
         fig = build_pitch_figure(pitch_rows, colours, teams, pitch_length, pitch_width)
         st.plotly_chart(fig, use_container_width=True)
 
+    # --- Aggregate heatmap ---
+    if "pitch_x" in tracks.columns:
+        _tm = {"ERFC only": 0, f"{away} only": 1, "Referee only": 2}
+        if has_team_col and team_filter != "Show all":
+            _all = tracks[tracks["team"] == _tm.get(team_filter, -99)].dropna(
+                subset=["pitch_x", "pitch_y"]
+            )
+        else:
+            _all = tracks.dropna(subset=["pitch_x", "pitch_y"])
+
+        _hm_title = f"Density heatmap — {team_filter} ({len(_all):,} positions)"
+        _fig_hm   = go.Figure()
+        _fig_hm.add_shape(type="rect", x0=0, y0=0, x1=pitch_length, y1=pitch_width,
+                          fillcolor="#3a7d44", line=dict(color="white", width=2), layer="below")
+        _fig_hm.add_shape(type="line",
+                          x0=pitch_length/2, y0=0, x1=pitch_length/2, y1=pitch_width,
+                          line=dict(color="white", width=2))
+        _r, _cx, _cy = 9.15, pitch_length/2, pitch_width/2
+        _fig_hm.add_shape(type="circle",
+                          x0=_cx-_r, y0=_cy-_r, x1=_cx+_r, y1=_cy+_r,
+                          line=dict(color="white", width=2), fillcolor="rgba(0,0,0,0)")
+        _pb_y0 = (pitch_width - 40.32) / 2
+        for _x0, _x1 in [(0, 16.5), (pitch_length-16.5, pitch_length)]:
+            _fig_hm.add_shape(type="rect", x0=_x0, y0=_pb_y0, x1=_x1, y1=_pb_y0+40.32,
+                              line=dict(color="white", width=2), fillcolor="rgba(0,0,0,0)")
+
+        if not _all.empty:
+            _fig_hm.add_trace(go.Histogram2d(
+                x=_all["pitch_x"], y=_all["pitch_y"],
+                colorscale=[
+                    [0.0,  "rgba(0,0,0,0)"],
+                    [0.01, "rgba(255,255,180,0.5)"],
+                    [0.3,  "rgba(255,160,0,0.7)"],
+                    [1.0,  "rgba(200,0,0,0.85)"],
+                ],
+                xbins=dict(start=0, end=pitch_length, size=pitch_length / 30),
+                ybins=dict(start=0, end=pitch_width,  size=pitch_width  / 20),
+                showscale=False,
+            ))
+        _fig_hm.update_layout(
+            title=dict(text=_hm_title, font=dict(color="white", size=13), x=0),
+            margin=dict(l=0, r=0, t=36, b=0),
+            xaxis=dict(range=[-2, pitch_length+2], showgrid=False, zeroline=False, visible=False),
+            yaxis=dict(range=[pitch_width+2, -2], showgrid=False, zeroline=False, visible=False,
+                       scaleanchor="x", scaleratio=1),
+            plot_bgcolor="#3a7d44",
+            paper_bgcolor="#1e1e1e",
+            height=380,
+        )
+        st.plotly_chart(_fig_hm, use_container_width=True)
+
     # --- Slider ---
+    play_key = f"{page_key}_playing"
+    if play_key not in st.session_state:
+        st.session_state[play_key] = False
+
     def _on_slider():
         st.session_state[frame_key] = st.session_state[f"_{page_key}_slider"]
+        st.session_state[play_key]  = False
 
     st.slider("Frame", min_value=min_frame, max_value=max_frame,
               value=st.session_state[frame_key],
               key=f"_{page_key}_slider", on_change=_on_slider)
 
-    # --- Prev / Next ---
-    btn_prev, btn_next, _ = st.columns([1, 1, 8])
+    # --- Prev / Play / Next ---
+    btn_prev, btn_play, btn_next = st.columns([1, 2, 1])
     with btn_prev:
-        if st.button("◀ Prev", use_container_width=True, key=f"{page_key}_prev"):
+        if st.button("⏮ Prev", use_container_width=True, key=f"{page_key}_prev"):
             st.session_state[frame_key] = max(min_frame, st.session_state[frame_key] - 1)
+            st.session_state[play_key]  = False
+            st.rerun()
+    with btn_play:
+        _play_label = "⏸ Pause" if st.session_state[play_key] else "▶ Play"
+        if st.button(_play_label, use_container_width=True, key=f"{page_key}_play"):
+            if not st.session_state[play_key] and st.session_state[frame_key] >= max_frame:
+                st.session_state[frame_key] = min_frame
+            st.session_state[play_key] = not st.session_state[play_key]
             st.rerun()
     with btn_next:
-        if st.button("Next ▶", use_container_width=True, key=f"{page_key}_next"):
+        if st.button("Next ⏭", use_container_width=True, key=f"{page_key}_next"):
             st.session_state[frame_key] = min(max_frame, st.session_state[frame_key] + 1)
+            st.session_state[play_key]  = False
             st.rerun()
+
+    # Playback tick
+    if st.session_state[play_key]:
+        if st.session_state[frame_key] < max_frame:
+            import time as _time
+            _time.sleep(0.1)
+            st.session_state[frame_key] += 1
+            st.rerun()
+        else:
+            st.session_state[play_key] = False
 
     # --- Stats metrics row ---
     if has_team_col:

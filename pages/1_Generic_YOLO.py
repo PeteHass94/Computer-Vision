@@ -8,7 +8,7 @@ import viewer_utils as vu
 
 st.set_page_config(page_title="Generic YOLO", layout="wide")
 
-clip_path   = vu.clip_selector()
+clip_path   = vu.clip_selector(exclude=["clips/dev_clip3.mp4"])
 tracks_path = Path(f"output/tracks_generic_{clip_path.stem}.parquet")
 
 st.title("1 · Generic YOLO")

@@ -1,0 +1,14 @@
+{
+  "clip_name": "dev_clip3.mp4",
+  "match_label": "ERFC vs Kesh — goal kick",
+  "home_team": "Enniskillen Rangers",
+  "away_team": "Kesh",
+  "starting_phase": "goal kick",
+  "erfc_attacking_direction": "right",
+  "opposition_attacking_direction": "left",
+  "kit_colours": {
+    "erfc": "red",
+    "opposition": "blue",
+    "referee": "yellow"
+  }
+}

@@ -17,9 +17,14 @@ st.set_page_config(page_title="Interactive SAM 2", layout="wide")
 # ---------------------------------------------------------------------------
 # Clip selector — only clips that have SAM 2 data
 # ---------------------------------------------------------------------------
-SAM2_CLIPS = [p for p in vu.CLIPS if Path(f"output/tracks_sam2_{Path(p).stem}.parquet").exists()]
+_SAM2_EXCLUDE = ["clips/dev_clip3.mp4"]
+SAM2_CLIPS = [
+    p for p in vu.CLIPS
+    if p not in _SAM2_EXCLUDE
+    and Path(f"output/tracks_sam2_{Path(p).stem}.parquet").exists()
+]
 if not SAM2_CLIPS:
-    SAM2_CLIPS = vu.CLIPS
+    SAM2_CLIPS = [p for p in vu.CLIPS if p not in _SAM2_EXCLUDE] or vu.CLIPS
 
 _sam2_key = "sam2_selected_clip"
 if _sam2_key not in st.session_state or st.session_state[_sam2_key] not in SAM2_CLIPS:
@@ -29,7 +34,7 @@ selected = st.sidebar.selectbox(
     "Dev clip",
     options=SAM2_CLIPS,
     index=SAM2_CLIPS.index(st.session_state[_sam2_key]),
-    format_func=lambda p: Path(p).name,
+    format_func=lambda p: vu.load_match_meta(Path(p).name).get("match_label", Path(p).name),
     key="_sam2_clip_select",
 )
 st.session_state[_sam2_key] = selected
@@ -46,6 +51,7 @@ META_PATH    = Path(f"output/meta_sam2_{CLIP_PATH.stem}.json")
 HOM_PATH     = vu.homography_path(CLIP_PATH)
 
 st.title("Track a single player with SAM 2")
+st.caption(vu.load_match_meta(CLIP_PATH.name)["match_label"])
 
 if not PARQUET_PATH.exists():
     st.info(

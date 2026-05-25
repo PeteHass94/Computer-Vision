@@ -1,0 +1,14 @@
+{
+  "clip_name": "dev_clip5.mp4",
+  "match_label": "ERFC vs Fintona — free kick",
+  "home_team": "Enniskillen Rangers",
+  "away_team": "Fintona",
+  "starting_phase": "free kick",
+  "erfc_attacking_direction": "left",
+  "opposition_attacking_direction": "right",
+  "kit_colours": {
+    "erfc": "red",
+    "opposition": "black",
+    "referee": "yellow"
+  }
+}
