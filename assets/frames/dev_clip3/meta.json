@@ -4,5 +4,7 @@
   "frame_step": 5,
   "total": 6576,
   "out_w": 958,
-  "out_h": 540
+  "out_h": 540,
+  "src_w": 2424,
+  "src_h": 1366
 }

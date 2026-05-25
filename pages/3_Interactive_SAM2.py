@@ -50,6 +50,13 @@ PARQUET_PATH = Path(f"output/tracks_sam2_{CLIP_PATH.stem}.parquet")
 META_PATH    = Path(f"output/meta_sam2_{CLIP_PATH.stem}.json")
 HOM_PATH     = vu.homography_path(CLIP_PATH)
 
+# Scale factors: JPEG display size vs original video resolution
+_frame_meta = json.loads(Path(f"assets/frames/{CLIP_PATH.stem}/meta.json").read_text())
+_src_w = _frame_meta.get("src_w", _frame_meta["out_w"])
+_src_h = _frame_meta.get("src_h", _frame_meta["out_h"])
+_sx    = _frame_meta["out_w"] / _src_w
+_sy    = _frame_meta["out_h"] / _src_h
+
 st.title("Track a single player with SAM 2")
 st.caption(vu.load_match_meta(CLIP_PATH.name)["match_label"])
 
@@ -182,11 +189,14 @@ current_all = df[df["frame_idx"] == current_idx]
 st.subheader(f"Frame {click_src} (click frame)")
 raw = vu.fetch_frame(str(CLIP_PATH), click_src)
 if raw is not None:
-    ann = raw.copy()
-    cv2.circle(ann, (click_x, click_y), 22, (0, 255, 0), 3)
-    cv2.circle(ann, (click_x, click_y),  6, (0, 255, 0), -1)
-    cv2.line(ann, (click_x-35, click_y), (click_x+35, click_y), (0, 255, 0), 2)
-    cv2.line(ann, (click_x, click_y-35), (click_x, click_y+35), (0, 255, 0), 2)
+    ann  = raw.copy()
+    sx   = int(click_x * _sx)
+    sy_  = int(click_y * _sy)
+    r, arm = int(22 * _sx), int(35 * _sx)
+    cv2.circle(ann, (sx, sy_), r,   (0, 255, 0), 3)
+    cv2.circle(ann, (sx, sy_), max(4, int(6 * _sx)), (0, 255, 0), -1)
+    cv2.line(ann, (sx - arm, sy_), (sx + arm, sy_), (0, 255, 0), 2)
+    cv2.line(ann, (sx, sy_ - arm), (sx, sy_ + arm), (0, 255, 0), 2)
     st.image(cv2.cvtColor(ann, cv2.COLOR_BGR2RGB), use_container_width=True)
 st.caption(f"Green crosshair = seed click ({click_x}, {click_y}) — fixed reference frame")
 
@@ -264,9 +274,12 @@ if not current_all.empty:
     cur_ts  = float(current_all.iloc[0]["timestamp_s"])
     cur_raw = vu.fetch_frame(str(CLIP_PATH), cur_src)
     if cur_raw is not None:
-        cur_ann = cur_raw.copy()
-        cv2.circle(cur_ann, (cur_px, cur_py), 28, (255, 60, 60), -1)
-        cv2.circle(cur_ann, (cur_px, cur_py), 28, (255, 255, 255), 3)
+        cur_ann  = cur_raw.copy()
+        dpx = int(cur_px * _sx)
+        dpy = int(cur_py * _sy)
+        dr  = int(28 * _sx)
+        cv2.circle(cur_ann, (dpx, dpy), dr, (255, 60, 60), -1)
+        cv2.circle(cur_ann, (dpx, dpy), dr, (255, 255, 255), 3)
         st.image(cv2.cvtColor(cur_ann, cv2.COLOR_BGR2RGB), use_container_width=True)
     st.caption(
         f"Current frame: {current_idx} (t={cur_ts:.1f}s)  ·  "

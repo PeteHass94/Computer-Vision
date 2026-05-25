@@ -1,0 +1,14 @@
+{
+  "clip_name": "dev_clip4.mp4",
+  "match_label": "ERFC vs Fintona — goal kick",
+  "home_team": "Enniskillen Rangers",
+  "away_team": "Fintona",
+  "starting_phase": "goal kick",
+  "erfc_attacking_direction": "left",
+  "opposition_attacking_direction": "right",
+  "kit_colours": {
+    "erfc": "red",
+    "opposition": "black",
+    "referee": "yellow"
+  }
+}
