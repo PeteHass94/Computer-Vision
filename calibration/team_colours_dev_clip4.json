@@ -1,0 +1,18 @@
+{
+  "_comment": "OpenCV HSV: hue 0-179, sat 0-255, val 0-255. hue_window = ±half-width. sat_max triggers dark-kit bypass (wins before hue competition).",
+  "team_a": {
+    "hue": 5, "sat": 200, "val": 120,
+    "hue_window": 22, "sat_min": 120,
+    "_note": "Enniskillen Rangers red. sat_min=120 filters out warm background tones (soil, boards) which have S<120 but H in red range."
+  },
+  "team_b": {
+    "hue": 0, "sat": 0, "val": 40,
+    "hue_window": 15, "sat_min": 0, "catchall": true,
+    "_note": "Black opposition + goalkeepers. Catchall: assigned to any track that doesn't match team_a or referee by hue window."
+  },
+  "referee": {
+    "hue": 108, "sat": 180, "val": 150,
+    "hue_window": 20, "sat_min": 40,
+    "_note": "Blue referee kit."
+  }
+}

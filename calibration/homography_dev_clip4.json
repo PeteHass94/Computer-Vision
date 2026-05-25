@@ -1,0 +1,86 @@
+{
+  "video_path": "clips/dev_clip4.mp4",
+  "calibration_frame": 1650,
+  "pitch_length_m": 105.0,
+  "pitch_width_m": 68.0,
+  "n_calibration_points": 6,
+  "pixel_points": [
+    [
+      1108,
+      492
+    ],
+    [
+      469,
+      656
+    ],
+    [
+      1591,
+      478
+    ],
+    [
+      1674,
+      1760
+    ],
+    [
+      2075,
+      496
+    ],
+    [
+      2793,
+      680
+    ]
+  ],
+  "pitch_points_m": [
+    [
+      16.5,
+      13.84
+    ],
+    [
+      16.5,
+      54.16
+    ],
+    [
+      52.5,
+      0.0
+    ],
+    [
+      52.5,
+      68.0
+    ],
+    [
+      88.5,
+      13.84
+    ],
+    [
+      88.5,
+      54.16
+    ]
+  ],
+  "point_labels": [
+    "Left  penalty box \u2014 FAR touchline top corner  (16.5m line, far side)",
+    "Left  penalty box \u2014 NEAR touchline top corner (16.5m line, near side)",
+    "Halfway line \u2014 FAR  touchline intersection",
+    "Halfway line \u2014 NEAR touchline intersection",
+    "Right penalty box \u2014 FAR touchline top corner  (16.5m line, far side)",
+    "Right penalty box \u2014 NEAR touchline top corner (16.5m line, near side)"
+  ],
+  "homography_matrix": [
+    [
+      -0.02121337271341843,
+      -0.13597388905064745,
+      86.32147980659252
+    ],
+    [
+      0.0008734572925810245,
+      -0.19813891189465285,
+      92.81925767634677
+    ],
+    [
+      6.663969728764306e-06,
+      -0.0026073574536193394,
+      0.9999999999999999
+    ]
+  ],
+  "rms_reprojection_error_m": 2.3909,
+  "notes": "Homography maps pixel (x,y) \u2192 pitch (x_m, y_m). Apply to foot position: bottom-centre of bbox. 6-point least-squares fit for even error distribution."
+}

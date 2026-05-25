@@ -1,0 +1,18 @@
+{
+  "_comment": "OpenCV HSV: hue 0-179, sat 0-255, val 0-255. hue_window = ±half-width. sat_max triggers dark-kit bypass (wins before hue competition).",
+  "team_a": {
+    "hue": 5, "sat": 200, "val": 120,
+    "hue_window": 22, "sat_min": 80,
+    "_note": "Enniskillen Rangers red. Wide window to claim orange-shifted red pixels."
+  },
+  "team_b": {
+    "hue": 108, "sat": 180, "val": 120,
+    "hue_window": 20, "sat_min": 40,
+    "_note": "Kesh blue top. Lower sat_min for dark/shadowed conditions."
+  },
+  "referee": {
+    "hue": 30, "sat": 200, "val": 180,
+    "hue_window": 10, "sat_min": 170,
+    "_note": "Yellow referee. Narrow window + high sat_min to avoid orange-red Rangers crop bleed."
+  }
+}

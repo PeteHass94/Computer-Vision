@@ -1,0 +1,16 @@
+{
+  "_comment": "HSV ranges for Rangers red kit detection. Contours are jersey-region blobs, not full-body bboxes.",
+  "hue_low_1":  0,
+  "hue_high_1": 10,
+  "hue_low_2":  170,
+  "hue_high_2": 179,
+  "sat_min":    120,
+  "val_min":    60,
+  "morph_open_k":  3,
+  "morph_close_k": 7,
+  "min_area":        200,
+  "min_height_px":   20,
+  "max_height_px":   150,
+  "aspect_ratio_min": 1.5,
+  "aspect_ratio_max": 4.0
+}

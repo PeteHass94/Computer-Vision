@@ -1,0 +1,27 @@
+{
+  "_comment": "OpenCV HSV: hue 0-179, sat 0-255, val 0-255. Classification is by hue-window pixel counting: each seed wins if it has the most pixels with hue within hue_window of the seed hue AND sat >= sat_min. Requires min_bin_pixels winning-bin pixels.",
+  "team_a": {
+    "hue": 5,
+    "sat": 200,
+    "val": 120,
+    "hue_window": 22,
+    "sat_min": 80,
+    "_note": "Enniskillen Rangers red kit. Wide window (H=0-27, wrap 158-179) to claim orange-shifted red pixels before referee window can win them."
+  },
+  "team_b": {
+    "hue": 108,
+    "sat": 180,
+    "val": 120,
+    "hue_window": 20,
+    "sat_min": 40,
+    "_note": "Kesh blue top. Lower sat_min for dark/shadowed conditions."
+  },
+  "referee": {
+    "hue": 30,
+    "sat": 200,
+    "val": 180,
+    "hue_window": 10,
+    "sat_min": 170,
+    "_note": "Referee yellow kit. Narrow window + very high sat_min to prevent Rangers orange-red crops (H=20-30, sat<170) from stealing this bucket."
+  }
+}
